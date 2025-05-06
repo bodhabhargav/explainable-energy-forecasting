@@ -1,0 +1,11 @@
+echo "pandas
+numpy
+scikit-learn
+xgboost
+lightgbm
+shap
+lime
+matplotlib
+seaborn
+streamlit" > requirements.txt
+
