@@ -7,6 +7,8 @@ from xgboost import XGBRegressor
 import shap
 from lime.lime_tabular import LimeTabularExplainer
 from lightgbm import LGBMRegressor
+import joblib
+import os
 
 
 # Load the dataset
@@ -17,23 +19,26 @@ def load_data(path="data/energydata_complete.csv"):
 
 # Preprocess the dataset
 def preprocess_data(df):
+    # Let pandas infer the date format automatically
     df["date"] = pd.to_datetime(df["date"])
-    df["hour"] = df["date"].dt.hour
-    df["day_of_week"] = df["date"].dt.dayofweek
-    df["is_weekend"] = (df["day_of_week"] >= 5).astype(int)  # convert to 0/1
 
+    # Extract hour, day of the week, and weekend flag (0 or 1)
+    df["hour"] = df["date"].dt.hour
+    df["day_of_week"] = df["date"].dt.dayofweek  # 0 = Monday, 6 = Sunday
+    df["is_weekend"] = (df["day_of_week"] >= 5).astype(int)  # 0 or 1
+
+    # Drop columns not needed
     df = df.drop(columns=["date", "rv1", "rv2"])
 
-    # Force all remaining columns to float64
+    # Convert remaining features (excluding Appliances) to float64
     for col in df.columns:
         if col != "Appliances":
             df[col] = pd.to_numeric(df[col], errors='coerce')
-
     df = df.astype({col: 'float64' for col in df.columns if col != "Appliances"})
 
-    print("Data after preprocessing:")
-    print(df.dtypes)  # check types
-    print(df.head())
+    print("Date parsed correctly and columns extracted:")
+    print(df[["hour", "day_of_week", "is_weekend"]].head())
+
     return df
 
 
@@ -128,15 +133,20 @@ if __name__ == "__main__":
     df = load_data()
     df = preprocess_data(df)
 
+    os.makedirs("models", exist_ok=True)
+
     # Train XGBoost
     model_xgb, X_train_xgb = train_xgboost(df)
     explain_with_shap(model_xgb, X_train_xgb, model_name="xgboost")
     explain_single_prediction(model_xgb, X_train_xgb, index=0, model_name="xgboost")
     explain_with_lime(model_xgb, X_train_xgb, index=0, model_name="xgboost")
+    joblib.dump(model_xgb, "models/xgboost_model.pkl")  # Save XGBoost
 
     # Train LightGBM
     model_lgb, X_train_lgb = train_lightgbm(df)
     explain_with_shap(model_lgb, X_train_lgb, model_name="lightgbm")
     explain_single_prediction(model_lgb, X_train_lgb, index=0, model_name="lightgbm")
     explain_with_lime(model_lgb, X_train_lgb, index=0, model_name="lightgbm")
+    joblib.dump(model_lgb, "models/lightgbm_model.pkl")  # Save LightGBM
+
 
