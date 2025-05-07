@@ -62,9 +62,6 @@ lime_explanation_xgboost_0.html, lime_explanation_lightgbm_0.html
 
 🚀 Running the Project:
 
-bash
-Copy
-Edit
 # Install dependencies
 pip install -r requirements.txt
 
