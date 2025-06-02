@@ -1,76 +1,97 @@
-# streamlit_app.py
-
 import streamlit as st
 import pandas as pd
 import numpy as np
 import shap
 import matplotlib.pyplot as plt
 import joblib
-from xgboost import XGBRegressor
-from lightgbm import LGBMRegressor
+from tensorflow.keras.models import load_model
+from sklearn.preprocessing import MinMaxScaler
 
-# Load preprocessed data (optional: to extract feature ranges)
-def load_sample_data():
+# Load sample data
+@st.cache_data
+def load_data():
     df = pd.read_csv("data/energydata_complete.csv")
     df["date"] = pd.to_datetime(df["date"])
     df["hour"] = df["date"].dt.hour
     df["day_of_week"] = df["date"].dt.dayofweek
     df["is_weekend"] = (df["day_of_week"] >= 5).astype(int)
-    df = df.drop(columns=["date", "rv1", "rv2"])
+    df.drop(columns=["date", "rv1", "rv2"], inplace=True)
     for col in df.columns:
-        if col != "Appliances":
-            df[col] = pd.to_numeric(df[col], errors='coerce')
-    df = df.astype({col: 'float64' for col in df.columns if col != "Appliances"})
+        df[col] = pd.to_numeric(df[col], errors='coerce')
+    df = df.astype({col: 'float64' for col in df.columns})
+    df.dropna(inplace=True)
     return df
 
-# Load model
+# Load models
 @st.cache_resource
 def load_models():
     xgb_model = joblib.load("models/xgboost_model.pkl")
     lgb_model = joblib.load("models/lightgbm_model.pkl")
-    return xgb_model, lgb_model
+    lstm_model = load_model("models/lstm_model.keras", compile=False)
+    tcn_model = load_model("models/tcn_model.keras", compile=False)
+    return xgb_model, lgb_model, lstm_model, tcn_model
 
-# SHAP explanation
+# SHAP explainer
 @st.cache_resource
 def get_shap_explainer(_model, _X):
-    explainer = shap.Explainer(_model, _X)
-    return explainer
+    return shap.Explainer(_model, _X)
 
+# Prepare sequence input (ensure 29 features for LSTM/TCN)
+def prepare_sequence_input(df, user_input, seq_len=24):
+    df_copy = df.copy()
+    user_df = pd.DataFrame([user_input])
+    df_with_input = pd.concat([df_copy, user_df], ignore_index=True)
 
-# Streamlit UI
-st.set_page_config(page_title="Energy Forecasting Dashboard", layout="wide")
+    scaler = MinMaxScaler()
+    scaled = scaler.fit_transform(df_with_input)
+
+    last_sequence = scaled[-seq_len:]
+    return np.array(last_sequence).reshape(1, seq_len, -1)
+
+# --- Streamlit App ---
+
+st.set_page_config(page_title="Energy Forecasting", layout="wide")
 st.title("🔌 Explainable AI for Appliance Energy Forecasting")
 
-sample_df = load_sample_data()
-X = sample_df.drop(columns=["Appliances"])
-xgb_model, lgb_model = load_models()
+df = load_data()
+xgb_model, lgb_model, lstm_model, tcn_model = load_models()
 
-# Model selector
-model_choice = st.selectbox("Choose a model to predict:", ["XGBoost", "LightGBM"])
-model = xgb_model if model_choice == "XGBoost" else lgb_model
+# Sidebar inputs
+st.sidebar.header("🔧 Input Features")
+model_choice = st.sidebar.selectbox("Choose a model:", ["XGBoost", "LightGBM", "LSTM", "TCN"])
+input_data = {}
 
-# Sidebar sliders for input features
-st.sidebar.header("Input Features")
-user_input = {}
-for col in X.columns:
-    min_val = float(X[col].min())
-    max_val = float(X[col].max())
-    mean_val = float(X[col].mean())
-    user_input[col] = st.sidebar.slider(col, min_value=min_val, max_value=max_val, value=mean_val)
+for col in df.columns:
+    min_val = float(df[col].min())
+    max_val = float(df[col].max())
+    mean_val = float(df[col].mean())
+    input_data[col] = st.sidebar.slider(col, min_val, max_val, mean_val)
 
-# Convert to DataFrame
-input_df = pd.DataFrame([user_input])
+input_df = pd.DataFrame([input_data])
+X = df.drop(columns=["Appliances"])
 
-# Make prediction
-prediction = model.predict(input_df)[0]
-st.subheader(f"⚡ Predicted Appliance Energy Usage: {prediction:.2f} Wh")
+# Prediction
+st.write("### 🔍 Input Preview")
+st.dataframe(input_df)
 
-# SHAP Explanation
-with st.expander("🔍 SHAP Explanation"):
-    explainer = get_shap_explainer(model, X)
-    shap_values = explainer(input_df)
-    #st.set_option('deprecation.showPyplotGlobalUse', False)
-    shap.plots.waterfall(shap_values[0], show=False)
-    st.pyplot(bbox_inches="tight")
+if st.button("Predict Energy Usage"):
+    if model_choice in ["XGBoost", "LightGBM"]:
+        model = xgb_model if model_choice == "XGBoost" else lgb_model
+        prediction = model.predict(input_df.drop(columns=["Appliances"]))[0]
+        st.subheader(f"⚡ {model_choice} Predicted Energy Usage: {prediction:.2f} Wh")
 
-st.caption("Built using Streamlit, SHAP, XGBoost and LightGBM")
+        with st.expander("🔍 SHAP Explanation"):
+            explainer = get_shap_explainer(model, X)
+            shap_values = explainer(input_df.drop(columns=["Appliances"]))
+            fig, ax = plt.subplots()
+            shap.plots.waterfall(shap_values[0], show=False)
+            st.pyplot(fig)
+
+    elif model_choice in ["LSTM", "TCN"]:
+        seq_input = prepare_sequence_input(df, input_data, seq_len=24)
+        model = lstm_model if model_choice == "LSTM" else tcn_model
+        prediction = model.predict(seq_input)[0][0]
+        st.subheader(f"⚡ {model_choice} Predicted Energy Usage: {prediction:.2f} Wh")
+        st.info("Note: SHAP/LIME are currently not supported for sequence-based models like LSTM/TCN.")
+
+st.caption("Built with Streamlit, SHAP, XGBoost, LightGBM, LSTM, and TCN")

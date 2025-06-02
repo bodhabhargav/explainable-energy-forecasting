@@ -37089,25 +37089,25 @@
 /***/ })
 /******/ ]);
 //# sourceMappingURL=bundle.js.map </script></head><body>
-        <div class="lime top_div" id="top_divEXUVN8HCOK8CGVQ"></div>
+        <div class="lime top_div" id="top_divYFB44IUIK1RPHV7"></div>
         
         <script>
-        var top_div = d3.select('#top_divEXUVN8HCOK8CGVQ').classed('lime top_div', true);
+        var top_div = d3.select('#top_divYFB44IUIK1RPHV7').classed('lime top_div', true);
         
         
                     var pp_div = top_div.append('div')
                                         .classed('lime predicted_value', true);
                     var pp_svg = pp_div.append('svg').style('width', '100%');
-                    var pp = new lime.PredictedValue(pp_svg, 50.0106248017416, -1.9253428646751443, 396.16755598738786);
+                    var pp = new lime.PredictedValue(pp_svg, 0.23267707228660583, -0.05279262363910675, 0.4789477586746216);
                     
         var exp_div;
             var exp = new lime.Explanation(["negative", "positive"]);
         
             exp_div = top_div.append('div').classed('lime explanation', true);
-            exp.show([["11.00 < hour <= 18.00", 45.751749113042706], ["lights <= 0.00", -24.079856605416417], ["RH_3 > 41.76", 21.32654968497382], ["T7 <= 18.70", 20.69467848679466], ["RH_1 > 43.06", 20.347897258399616], ["T3 <= 20.79", -18.145364743926574], ["RH_2 > 43.29", -10.293907308141952], ["T1 <= 20.78", 9.642345543004561], ["Windspeed > 5.50", 6.761908729906744], ["T8 <= 20.79", -6.626504469384044]], 1, exp_div);
+            exp.show([["Appliances_t23 > 0.08", 0.14005973304817987], ["Appliances_t22 > 0.08", -0.03343011396673209], ["Appliances_t21 > 0.08", 0.01862094589547353], ["T4_t23 <= 0.72", 0.013341186938942193], ["T2_t23 <= 0.41", -0.013128936293174848], ["RH_out_t23 > 0.84", -0.01290298012839778], ["T8_t23 <= 0.65", -0.009758330769299734], ["T_out_t22 <= 0.49", 0.009432893734268298], ["T_out_t23 <= 0.49", -0.008708156680909383], ["T2_t22 <= 0.41", 0.008132240296161088]], 1, exp_div);
             
         var raw_div = top_div.append('div');
-            exp.show_raw_tabular([["hour", "12.00", 45.751749113042706], ["lights", "0.00", -24.079856605416417], ["RH_3", "44.29", 21.32654968497382], ["T7", "17.50", 20.69467848679466], ["RH_1", "45.50", 20.347897258399616], ["T3", "20.39", -18.145364743926574], ["RH_2", "45.09", -10.293907308141952], ["T1", "19.89", 9.642345543004561], ["Windspeed", "7.50", 6.761908729906744], ["T8", "18.11", -6.626504469384044]], 1, raw_div);
+            exp.show_raw_tabular([["Appliances_t23", "0.28", 0.14005973304817987], ["Appliances_t22", "0.29", -0.03343011396673209], ["Appliances_t21", "0.54", 0.01862094589547353], ["T4_t23", "0.39", 0.013341186938942193], ["T2_t23", "0.25", -0.013128936293174848], ["RH_out_t23", "0.86", -0.01290298012839778], ["T8_t23", "0.45", -0.009758330769299734], ["T_out_t22", "0.35", 0.009432893734268298], ["T_out_t23", "0.36", -0.008708156680909383], ["T2_t22", "0.23", 0.008132240296161088]], 1, raw_div);
         
         </script>
         </body></html>
