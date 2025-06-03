@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import joblib
 from tensorflow.keras.models import load_model
 from sklearn.preprocessing import MinMaxScaler
+from lime.lime_tabular import LimeTabularExplainer
 
 # Load sample data
 @st.cache_data
@@ -47,6 +48,23 @@ def prepare_sequence_input(df, user_input, seq_len=24):
 
     last_sequence = scaled[-seq_len:]
     return np.array(last_sequence).reshape(1, seq_len, -1)
+
+# Build background sequences for explainers
+@st.cache_resource
+def get_sequence_background(df, seq_len=24, sample_size=50):
+    scaler = MinMaxScaler()
+    scaled = scaler.fit_transform(df)
+    sequences = []
+    for i in range(len(scaled) - seq_len):
+        sequences.append(scaled[i:i + seq_len])
+    sequences = np.array(sequences)
+    if len(sequences) > sample_size:
+        idx = np.random.choice(len(sequences), sample_size, replace=False)
+        sequences = sequences[idx]
+    return sequences
+
+def _flatten(seqs):
+    return seqs.reshape(seqs.shape[0], -1)
 
 # --- Streamlit App ---
 
@@ -92,6 +110,33 @@ if st.button("Predict Energy Usage"):
         model = lstm_model if model_choice == "LSTM" else tcn_model
         prediction = model.predict(seq_input)[0][0]
         st.subheader(f"⚡ {model_choice} Predicted Energy Usage: {prediction:.2f} Wh")
-        st.info("Note: SHAP/LIME are currently not supported for sequence-based models like LSTM/TCN.")
+
+        background = get_sequence_background(df, seq_len=24, sample_size=50)
+        background_flat = _flatten(background)
+        instance_flat = _flatten(seq_input)
+
+        def _predict(seqs_flat):
+            seqs = seqs_flat.reshape(seqs_flat.shape[0], seq_input.shape[1], seq_input.shape[2])
+            return model.predict(seqs).reshape(-1)
+
+        feature_names = [f"{col}_t{i}" for i in range(seq_input.shape[1]) for col in df.columns]
+
+        with st.expander("🔍 SHAP Explanation"):
+            explainer = shap.KernelExplainer(_predict, background_flat)
+            shap_values = explainer(instance_flat)
+            explanation = shap.Explanation(values=shap_values[0],
+                                           base_values=explainer.expected_value,
+                                           data=instance_flat[0],
+                                           feature_names=feature_names)
+            fig, ax = plt.subplots()
+            shap.plots.waterfall(explanation, show=False)
+            st.pyplot(fig)
+
+        with st.expander("📋 LIME Explanation"):
+            lime_explainer = LimeTabularExplainer(background_flat,
+                                                 mode="regression",
+                                                 feature_names=feature_names)
+            explanation = lime_explainer.explain_instance(instance_flat[0], _predict, num_features=10)
+            st.pyplot(explanation.as_pyplot_figure())
 
 st.caption("Built with Streamlit, SHAP, XGBoost, LightGBM, LSTM, and TCN")
