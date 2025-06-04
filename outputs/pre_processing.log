@@ -1,0 +1,177 @@
+2025-06-04 14:42:35,382 - INFO - Environment setup complete. Logging configured.
+2025-06-04 14:42:35,382 - INFO - Starting data preprocessing script.
+2025-06-04 14:42:35,382 - INFO - Loading data from 'data/energydata_complete.csv'...
+2025-06-04 14:42:35,445 - INFO - Data loaded successfully.
+2025-06-04 14:42:35,445 - INFO - --- Data Summary ---
+2025-06-04 14:42:35,456 - INFO - First 5 rows:
+                  date  Appliances  lights     T1       RH_1    T2       RH_2     T3       RH_3  ...   RH_9     T_out  Press_mm_hg  RH_out  Windspeed  Visibility  Tdewpoint        rv1        rv2
+0  2016-01-11 17:00:00          60      30  19.89  47.596667  19.2  44.790000  19.79  44.730000  ...  45.53  6.600000        733.5    92.0   7.000000   63.000000        5.3  13.275433  13.275433
+1  2016-01-11 17:10:00          60      30  19.89  46.693333  19.2  44.722500  19.79  44.790000  ...  45.56  6.483333        733.6    92.0   6.666667   59.166667        5.2  18.606195  18.606195
+2  2016-01-11 17:20:00          50      30  19.89  46.300000  19.2  44.626667  19.79  44.933333  ...  45.50  6.366667        733.7    92.0   6.333333   55.333333        5.1  28.642668  28.642668
+3  2016-01-11 17:30:00          50      40  19.89  46.066667  19.2  44.590000  19.79  45.000000  ...  45.40  6.250000        733.8    92.0   6.000000   51.500000        5.0  45.410389  45.410389
+4  2016-01-11 17:40:00          60      40  19.89  46.333333  19.2  44.530000  19.79  45.000000  ...  45.40  6.133333        733.9    92.0   5.666667   47.666667        4.9  10.084097  10.084097
+
+[5 rows x 29 columns]
+2025-06-04 14:42:35,460 - INFO - DataFrame Info:
+<class 'pandas.core.frame.DataFrame'>
+RangeIndex: 19735 entries, 0 to 19734
+Data columns (total 29 columns):
+ #   Column       Non-Null Count  Dtype  
+---  ------       --------------  -----  
+ 0   date         19735 non-null  object 
+ 1   Appliances   19735 non-null  int64  
+ 2   lights       19735 non-null  int64  
+ 3   T1           19735 non-null  float64
+ 4   RH_1         19735 non-null  float64
+ 5   T2           19735 non-null  float64
+ 6   RH_2         19735 non-null  float64
+ 7   T3           19735 non-null  float64
+ 8   RH_3         19735 non-null  float64
+ 9   T4           19735 non-null  float64
+ 10  RH_4         19735 non-null  float64
+ 11  T5           19735 non-null  float64
+ 12  RH_5         19735 non-null  float64
+ 13  T6           19735 non-null  float64
+ 14  RH_6         19735 non-null  float64
+ 15  T7           19735 non-null  float64
+ 16  RH_7         19735 non-null  float64
+ 17  T8           19735 non-null  float64
+ 18  RH_8         19735 non-null  float64
+ 19  T9           19735 non-null  float64
+ 20  RH_9         19735 non-null  float64
+ 21  T_out        19735 non-null  float64
+ 22  Press_mm_hg  19735 non-null  float64
+ 23  RH_out       19735 non-null  float64
+ 24  Windspeed    19735 non-null  float64
+ 25  Visibility   19735 non-null  float64
+ 26  Tdewpoint    19735 non-null  float64
+ 27  rv1          19735 non-null  float64
+ 28  rv2          19735 non-null  float64
+dtypes: float64(26), int64(2), object(1)
+memory usage: 4.4+ MB
+
+2025-06-04 14:42:35,501 - INFO - Descriptive Statistics:
+         Appliances        lights            T1          RH_1            T2          RH_2  ...        RH_out     Windspeed    Visibility     Tdewpoint           rv1           rv2
+count  19735.000000  19735.000000  19735.000000  19735.000000  19735.000000  19735.000000  ...  19735.000000  19735.000000  19735.000000  19735.000000  19735.000000  19735.000000
+mean      97.694958      3.801875     21.686571     40.259739     20.341219     40.420420  ...     79.750418      4.039752     38.330834      3.760707     24.988033     24.988033
+std      102.524891      7.935988      1.606066      3.979299      2.192974      4.069813  ...     14.901088      2.451221     11.794719      4.194648     14.496634     14.496634
+min       10.000000      0.000000     16.790000     27.023333     16.100000     20.463333  ...     24.000000      0.000000      1.000000     -6.600000      0.005322      0.005322
+25%       50.000000      0.000000     20.760000     37.333333     18.790000     37.900000  ...     70.333333      2.000000     29.000000      0.900000     12.497889     12.497889
+50%       60.000000      0.000000     21.600000     39.656667     20.000000     40.500000  ...     83.666667      3.666667     40.000000      3.433333     24.897653     24.897653
+75%      100.000000      0.000000     22.600000     43.066667     21.500000     43.260000  ...     91.666667      5.500000     40.000000      6.566667     37.583769     37.583769
+max     1080.000000     70.000000     26.260000     63.360000     29.856667     56.026667  ...    100.000000     14.000000     66.000000     15.500000     49.996530     49.996530
+
+[8 rows x 28 columns]
+2025-06-04 14:42:35,503 - INFO - Missing Values per column:
+date           0
+Appliances     0
+lights         0
+T1             0
+RH_1           0
+T2             0
+RH_2           0
+T3             0
+RH_3           0
+T4             0
+RH_4           0
+T5             0
+RH_5           0
+T6             0
+RH_6           0
+T7             0
+RH_7           0
+T8             0
+RH_8           0
+T9             0
+RH_9           0
+T_out          0
+Press_mm_hg    0
+RH_out         0
+Windspeed      0
+Visibility     0
+Tdewpoint      0
+rv1            0
+rv2            0
+dtype: int64
+2025-06-04 14:42:35,503 - INFO - --- Generating Exploratory Visualizations ---
+2025-06-04 14:42:35,738 - INFO - Saved: 01_appliances_time_series.png
+2025-06-04 14:42:35,895 - INFO - Saved: 02_appliances_distribution.png
+2025-06-04 14:42:36,086 - INFO - Saved: 03_correlation_heatmap.png
+2025-06-04 14:42:54,187 - INFO - Saved: 04_appliances_seasonal_decomposition.png
+2025-06-04 14:42:54,211 - INFO - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2025-06-04 14:42:54,218 - INFO - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2025-06-04 14:42:54,358 - INFO - Saved: 05_appliances_vs_hour_boxplot.png
+2025-06-04 14:42:54,381 - INFO - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2025-06-04 14:42:54,388 - INFO - Using categorical units to plot a list of strings that are all parsable as floats or dates. If these strings should be plotted as numbers, cast to the appropriate data type before plotting.
+2025-06-04 14:42:54,458 - INFO - Saved: 06_appliances_vs_day_of_week_boxplot.png
+2025-06-04 14:42:54,529 - INFO - Saved: 07_appliances_vs_T_out_scatter.png
+2025-06-04 14:42:54,650 - INFO - Saved: 08_appliances_rolling_stats.png
+2025-06-04 14:42:54,650 - INFO - Exploratory visualizations generation attempt finished.
+2025-06-04 14:42:54,650 - INFO - --- Preprocessing Data ---
+2025-06-04 14:42:54,650 - INFO - Dropping 'rv1' and 'rv2' columns...
+2025-06-04 14:42:54,651 - INFO - Performing Time Feature Engineering...
+2025-06-04 14:42:54,660 - INFO - Creating 0 lag features for columns: ['Appliances', 'T_out', 'RH_out']...
+2025-06-04 14:42:54,665 - INFO - No rows dropped due to NaNs from lag features (or no lags created).
+2025-06-04 14:42:54,666 - INFO - Scaling numerical features...
+2025-06-04 14:42:54,672 - INFO - Scaled features: ['lights', 'T1', 'RH_1', 'T2', 'RH_2', 'T3', 'RH_3', 'T4', 'RH_4', 'T5', 'RH_5', 'T6', 'RH_6', 'T7', 'RH_7', 'T8', 'RH_8', 'T9', 'RH_9', 'T_out', 'Press_mm_hg', 'RH_out', 'Windspeed', 'Visibility', 'Tdewpoint', 'hour', 'day_of_week', 'day_of_year', 'month', 'week_of_year', 'hour_sin', 'hour_cos', 'day_of_week_sin', 'day_of_week_cos', 'month_sin', 'month_cos']
+2025-06-04 14:42:54,672 - INFO - Dropping original 'date' column after feature engineering.
+2025-06-04 14:42:54,673 - INFO - Preprocessing completed.
+2025-06-04 14:42:54,673 - INFO - --- Processed Data Summary ---
+2025-06-04 14:42:54,681 - INFO - First 5 rows of processed data:
+   Appliances    lights        T1      RH_1        T2      RH_2        T3      RH_3  ...  week_of_year  weekend  hour_sin  hour_cos  day_of_week_sin  day_of_week_cos  month_sin  month_cos
+0          60  3.301264 -1.118645  1.843821 -0.520411  1.073683 -1.235063  1.686130  ...     -1.660283        0 -1.365324 -0.365972        -0.019238         1.422094  -2.058727   1.209107
+1          60  3.301264 -1.118645  1.616807 -0.520411  1.057097 -1.235063  1.704566  ...     -1.660283        0 -1.365324 -0.365972        -0.019238         1.422094  -2.058727   1.209107
+2          50  3.301264 -1.118645  1.517959 -0.520411  1.033550 -1.235063  1.748608  ...     -1.660283        0 -1.365324 -0.365972        -0.019238         1.422094  -2.058727   1.209107
+3          50  4.561378 -1.118645  1.459321 -0.520411  1.024540 -1.235063  1.769092  ...     -1.660283        0 -1.365324 -0.365972        -0.019238         1.422094  -2.058727   1.209107
+4          60  4.561378 -1.118645  1.526336 -0.520411  1.009797 -1.235063  1.769092  ...     -1.660283        0 -1.365324 -0.365972        -0.019238         1.422094  -2.058727   1.209107
+
+[5 rows x 38 columns]
+2025-06-04 14:42:54,685 - INFO - Processed DataFrame Info:
+<class 'pandas.core.frame.DataFrame'>
+RangeIndex: 19735 entries, 0 to 19734
+Data columns (total 38 columns):
+ #   Column           Non-Null Count  Dtype  
+---  ------           --------------  -----  
+ 0   Appliances       19735 non-null  int64  
+ 1   lights           19735 non-null  float64
+ 2   T1               19735 non-null  float64
+ 3   RH_1             19735 non-null  float64
+ 4   T2               19735 non-null  float64
+ 5   RH_2             19735 non-null  float64
+ 6   T3               19735 non-null  float64
+ 7   RH_3             19735 non-null  float64
+ 8   T4               19735 non-null  float64
+ 9   RH_4             19735 non-null  float64
+ 10  T5               19735 non-null  float64
+ 11  RH_5             19735 non-null  float64
+ 12  T6               19735 non-null  float64
+ 13  RH_6             19735 non-null  float64
+ 14  T7               19735 non-null  float64
+ 15  RH_7             19735 non-null  float64
+ 16  T8               19735 non-null  float64
+ 17  RH_8             19735 non-null  float64
+ 18  T9               19735 non-null  float64
+ 19  RH_9             19735 non-null  float64
+ 20  T_out            19735 non-null  float64
+ 21  Press_mm_hg      19735 non-null  float64
+ 22  RH_out           19735 non-null  float64
+ 23  Windspeed        19735 non-null  float64
+ 24  Visibility       19735 non-null  float64
+ 25  Tdewpoint        19735 non-null  float64
+ 26  hour             19735 non-null  float64
+ 27  day_of_week      19735 non-null  float64
+ 28  day_of_year      19735 non-null  float64
+ 29  month            19735 non-null  float64
+ 30  week_of_year     19735 non-null  float64
+ 31  weekend          19735 non-null  int64  
+ 32  hour_sin         19735 non-null  float64
+ 33  hour_cos         19735 non-null  float64
+ 34  day_of_week_sin  19735 non-null  float64
+ 35  day_of_week_cos  19735 non-null  float64
+ 36  month_sin        19735 non-null  float64
+ 37  month_cos        19735 non-null  float64
+dtypes: float64(36), int64(2)
+memory usage: 5.7 MB
+
+2025-06-04 14:42:55,079 - INFO - Processed data saved to 'data/energydata_processed.csv'
+2025-06-04 14:42:55,079 - INFO - Data preprocessing script finished.
