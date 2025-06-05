@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import joblib
+import matplotlib.pyplot as plt
 from tensorflow.keras.models import load_model
 from sklearn.preprocessing import MinMaxScaler
 
@@ -11,52 +12,87 @@ def load_data(path="data/energydata_complete.csv"):
     df["hour"] = df["date"].dt.hour
     df["day_of_week"] = df["date"].dt.dayofweek
     df["is_weekend"] = (df["day_of_week"] >= 5).astype(int)
-    df = df.drop(columns=["date", "rv1", "rv2"])
+    df["hour_sin"] = np.sin(2 * np.pi * df["hour"] / 24)
+    df["hour_cos"] = np.cos(2 * np.pi * df["hour"] / 24)
+    df.drop(columns=["date", "rv1", "rv2"], inplace=True)
     df = df.astype({col: 'float64' for col in df.columns if col != "Appliances"})
     return df
 
-# Prepare sequential data
+# Prepare sequential data for LSTM and TCN
 def prepare_sequence_data(df, target_column="Appliances", sequence_length=24):
+    df_seq = df.drop(columns=[target_column])
     scaler = MinMaxScaler()
-    scaled = scaler.fit_transform(df)
+    scaled = scaler.fit_transform(df_seq)
     X, y = [], []
     for i in range(len(scaled) - sequence_length):
         X.append(scaled[i:i + sequence_length])
         y.append(df.iloc[i + sequence_length][target_column])
-    X, y = np.array(X), np.array(y)
-    return X, y, scaler
+    return np.array(X), np.array(y)
 
-# Predict with tree models
-def predict_tree_models(df):
-    X = df.drop(columns=["Appliances"])
-    y = df["Appliances"]
+# Evaluate all models and plot predictions
+def evaluate_models(df, N=100):
+    print("✅ Evaluating models on the last {} samples...\n".format(N))
 
-    print("\n📦 Testing XGBoost:")
+    # Columns used for tree-based models
+    feature_cols = ['lights', 'T1', 'RH_1', 'T2', 'RH_2', 'T3', 'RH_3', 'T4', 'RH_4',
+                    'T5', 'RH_5', 'T6', 'RH_6', 'T7', 'RH_7', 'T8', 'RH_8',
+                    'T9', 'RH_9', 'T_out', 'Press_mm_hg', 'RH_out', 'Windspeed',
+                    'Visibility', 'Tdewpoint', 'hour', 'day_of_week', 'is_weekend',
+                    'hour_sin', 'hour_cos']
+
+    X_tree = df[feature_cols]
+    y_true = df["Appliances"].values[-N:]
+
+    # Load models
     xgb_model = joblib.load("models/xgboost_model.pkl")
-    xgb_pred = xgb_model.predict(X[-1:])[0]
-    print(f"XGBoost prediction: {xgb_pred:.2f} Wh")
-
-    print("\n📦 Testing LightGBM:")
     lgb_model = joblib.load("models/lightgbm_model.pkl")
-    lgb_pred = lgb_model.predict(X[-1:])[0]
-    print(f"LightGBM prediction: {lgb_pred:.2f} Wh")
+    lstm_model = load_model("models/lstm_model.keras", compile=False)
+    tcn_model = load_model("models/tcn_model.keras", compile=False)
 
-# Predict with LSTM and TCN
-def predict_sequence_models(df):
-    X_seq, y_seq, _ = prepare_sequence_data(df)
+    # Predict tree-based
+    xgb_preds = []
+    lgb_preds = []
+    for i in range(len(df) - N, len(df)):
+        xgb_pred = xgb_model.predict(X_tree.iloc[i:i+1])[0]
+        lgb_pred = lgb_model.predict(X_tree.iloc[i:i+1])[0]
+        xgb_preds.append(xgb_pred)
+        lgb_preds.append(lgb_pred)
 
-    print("\n📦 Testing LSTM:")
-    lstm_model = load_model("models/lstm_model.keras")
-    lstm_pred = lstm_model.predict(X_seq[-1:])[0][0]
-    print(f"LSTM prediction: {lstm_pred:.2f} Wh")
+    print("📦 XGBoost sample predictions:", np.round(xgb_preds[:5], 2))
+    print("📦 LightGBM sample predictions:", np.round(lgb_preds[:5], 2))
 
-    print("\n📦 Testing TCN:")
-    tcn_model = load_model("models/tcn_model.keras")
-    tcn_pred = tcn_model.predict(X_seq[-1:])[0][0]
-    print(f"TCN prediction: {tcn_pred:.2f} Wh")
+    # Predict sequence-based
+    X_seq, y_seq = prepare_sequence_data(df)
+    lstm_preds = []
+    tcn_preds = []
+    for i in range(len(X_seq) - N, len(X_seq)):
+        lstm_pred = lstm_model.predict(X_seq[i:i+1], verbose=0)[0][0]
+        tcn_pred = tcn_model.predict(X_seq[i:i+1], verbose=0)[0][0]
+        lstm_preds.append(lstm_pred)
+        tcn_preds.append(tcn_pred)
 
-# Main
+    print("📦 LSTM sample predictions:", np.round(lstm_preds[:5], 2))
+    print("📦 TCN sample predictions:", np.round(tcn_preds[:5], 2))
+    print()
+
+    # Plotting
+    plt.figure(figsize=(12, 6))
+    plt.plot(y_true, label="True", linewidth=2)
+    plt.plot(xgb_preds, label="XGBoost")
+    plt.plot(lgb_preds, label="LightGBM")
+    plt.plot(lstm_preds, label="LSTM")
+    plt.plot(tcn_preds, label="TCN")
+    plt.title("Energy Appliance Predictions (Last {} Samples)".format(N))
+    plt.xlabel("Time Step")
+    plt.ylabel("Appliances Energy Consumption (Wh)")
+    plt.legend()
+    plt.tight_layout()
+    plt.grid(True)
+    plt.savefig("model_comparison_plot.png")
+    plt.show()
+    print("📊 Plot saved as: model_comparison_plot.png")
+
+# Main execution
 if __name__ == "__main__":
     df = load_data()
-    predict_tree_models(df)
-    predict_sequence_models(df)
+    evaluate_models(df, N=100)
