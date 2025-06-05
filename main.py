@@ -11,7 +11,6 @@ from tensorflow.keras.optimizers import Adam
 import joblib
 import os
 
-print("✅ Data loaded.")
 
 # Load and preprocess data
 def load_data():
